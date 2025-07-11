@@ -130,7 +130,7 @@ class _HomePageState extends State<HomePage> {
       details: '3.8L twin-turbo flat-six · 640 bhp · 0-100 in 2.7s',
     ),
     Car(
-      name: 'Mercedes AMG GT',
+      name: 'Mercedes AMG ',
       imageUrl: 'https://robbreport.com/wp-content/uploads/2022/03/2-4.jpg?w=1000',
       capacity: '2 people',
       pricePerDay: '\$250/day',
