@@ -1,11 +1,11 @@
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:android_studio/Pit_Stop/screens/reset_password.dart';
 import 'package:android_studio/Pit_Stop/screens/signup_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 void main() async {
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false,home: LoginPage(),));
+  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: LoginPage()));
 }
 
 class LoginPage extends StatefulWidget {
@@ -16,48 +16,48 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
-//text controllers
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-
   Future<void> _handleLogin() async {
-
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login Successful')),
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Successful')),
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        });
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Login failed')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
-  void dispose() async {
+  void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +101,8 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 10),
                       const Text("Login to your account", style: TextStyle(color: Colors.black)),
                       const SizedBox(height: 30),
+
+                      // Email
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -118,11 +120,13 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                       const SizedBox(height: 20),
+
+                      // Password
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock, color: Colors.black),
+                          prefixIcon: const Icon(Icons.lock),
                           hintText: 'Password',
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
@@ -130,9 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             ),
                             onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
+                              setState(() => _obscurePassword = !_obscurePassword);
                             },
                           ),
                         ),
@@ -143,55 +145,44 @@ class _LoginPageState extends State<LoginPage> {
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value!;
-                                  });
-                                },
-                              ),
-                              const Text("Remember Me", style: TextStyle(color: Colors.black)),
-                            ],
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
-                              );
-                            },
-                            child: const Text("Forgot Password?", style: TextStyle(color: Colors.purple)),
-                          ),
-                        ],
+
+                      // Forgot Password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                            );
+                          },
+                          child: const Text("Forgot Password?", style: TextStyle(color: Colors.purple)),
+                        ),
                       ),
-                      const SizedBox(height: 20),
+
+                      const SizedBox(height: 10),
+
+                      // Login Button
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _rememberMe && !_isLoading ? _handleLogin : null,
+                          onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             disabledBackgroundColor: Colors.grey,
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                              : const Text(
-                            "Login",
-                            style: TextStyle(color: Colors.white),
-                          ),
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text("Login", style: TextStyle(color: Colors.white)),
                         ),
                       ),
+
                       const SizedBox(height: 20),
+
+                      // Sign Up
                       Center(
                         child: GestureDetector(
                           onTap: () {

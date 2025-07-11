@@ -1,4 +1,4 @@
-import 'package:android_studio/Pit_Stop/screens/home_page.dart';
+
 import 'package:android_studio/Pit_Stop/screens/login_page.dart';
 import 'package:android_studio/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -60,7 +60,9 @@ class _RegisterPageState extends State<RegisterPage> {
             context,
             MaterialPageRoute(builder: (context) => const LoginPage()),
           );
-        });
+        }
+        );
+        print(userCredential.user?.uid);
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? 'Registration failed')),
