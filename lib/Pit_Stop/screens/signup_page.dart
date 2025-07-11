@@ -1,8 +1,15 @@
+import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:android_studio/Pit_Stop/screens/login_page.dart';
+import 'package:android_studio/firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: RegisterPage()));
 }
 
@@ -14,27 +21,10 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-
-  //text controllers
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _obscurePassword = true;
-
-
-
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your name';
-    }
-    final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
-    if (!nameRegExp.hasMatch(value.trim())) {
-      return 'Only letters are allowed';
-    }
-    return null;
-  }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -50,21 +40,32 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
-  void _handleRegister()  {
+  void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registered Successfully')),
-      );
-      _nameController.clear();
-      _emailController.clear();
-      _passwordController.clear();
-
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
+      try {
+        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
-      });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registered Successfully')),
+        );
+
+        _emailController.clear();
+        _passwordController.clear();
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        });
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Registration failed')),
+        );
+      }
     }
   }
 
@@ -112,21 +113,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         "Create your new account",
                         style: TextStyle(color: Colors.black),
                       ),
-
-
                       const SizedBox(height: 25),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.person),
-                          hintText: 'Full Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: _validateName,
-                      ),
 
-
-                      const SizedBox(height: 15),
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -144,8 +132,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                       ),
 
-
                       const SizedBox(height: 15),
+
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -167,35 +155,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         validator: _validatePassword,
                       ),
 
+                      const SizedBox(height: 25),
 
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value!;
-                                  });
-                                },
-                              ),
-                              const Text("Remember Me"),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _rememberMe ? _handleRegister : null,
+                          onPressed: _handleRegister,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
-                            disabledBackgroundColor: Colors.grey,
                           ),
                           child: const Text(
                             "Sign Up",
@@ -239,5 +207,3 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
-
-

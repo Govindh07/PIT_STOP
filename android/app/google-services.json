@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1091907064831",
+    "project_id": "pit-stop-ee77a",
+    "storage_bucket": "pit-stop-ee77a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091907064831:android:afa291ae201bee9c1b4dca",
+        "android_client_info": {
+          "package_name": "com.example.android_studio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7hhYUiUdwvK-Z5AHtdbLEsSTZqqARee8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
