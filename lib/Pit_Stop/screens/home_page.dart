@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
 
-
 void main() {
   runApp(const PitStopApp());
 }
@@ -26,7 +25,6 @@ class PitStopApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -149,6 +147,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        automaticallyImplyLeading: false, // ✅ removes back button
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,

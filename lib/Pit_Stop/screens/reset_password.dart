@@ -15,41 +15,68 @@ class ResetPasswordPage extends StatefulWidget {
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
+
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
 
-@override
+  @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
   }
 
-  //Reset Password Functionality
+  Future<void> passwordReset() async {
+    final email = _emailController.text.trim();
 
-  Future passwordReset() async {
- try{
-   await FirebaseAuth.instance.sendPasswordResetEmail(
-       email: _emailController.text.trim());
-   showDialog(
-       context: context,
-       builder: (context){
-         return AlertDialog(
-           content: Text("Password reset link sent! Check your email"),
-         );
-       }
-   );
- } on FirebaseAuthException catch(e){
-   print(e);
-   showDialog(
-       context: context,
-       builder: (context){
-         return AlertDialog(
-           content: Text(e.message.toString()),
-         );
-       }
-   );
- }
+    try {
+      // 🔍 Check if account is registered
+      final methods =
+      await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+
+      if (methods.isEmpty) {
+        // ❌ No account found
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            content: Text(
+              "This account is not registered to an existing account.",
+            ),
+          ),
+        );
+        return;
+      }
+
+      if (!methods.contains('password')) {
+        // ⚠ Registered but not with email/password
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            content: Text(
+              "This account is registered using a different sign-in method.",
+            ),
+          ),
+        );
+        return;
+      }
+
+      // ✅ Send password reset email
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      showDialog(
+        context: context,
+        builder: (context) => const AlertDialog(
+          content: Text("Password reset link sent! Check your email."),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Text(e.message ?? "An error occurred."),
+        ),
+      );
+    }
   }
 
   @override
@@ -82,8 +109,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     const CircleAvatar(
                       backgroundColor: Colors.yellowAccent,
                       radius: 30,
-                      child:
-                      Icon(Icons.vpn_key, color: Colors.black, size: 30),
+                      child: Icon(Icons.vpn_key, color: Colors.black, size: 30),
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -125,12 +151,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              // Email reset logic
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                    Text("Password reset link sent")),
-                              );
+                              passwordReset(); // ✅ Final logic
                             }
                           },
                           child: const Text(
