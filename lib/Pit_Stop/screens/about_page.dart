@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
-void main(){
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false,home: AboutPage(),));
+void main() {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: const AboutPage(),
+    themeMode: ThemeMode.dark,
+    theme:  ThemeData.dark(),
+  ));
 }
 
 class AboutPage extends StatelessWidget {
@@ -10,9 +15,13 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('About Us',style: TextStyle(color: Colors.black),),
-        backgroundColor: Colors.yellowAccent,
+        title: const Text(
+          'About Us',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.grey[900],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,12 +38,12 @@ class AboutPage extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               'PitStop is a premium car rental platform that allows users to explore, rent, and experience the world’s most exotic cars. Our mission is to bring speed and style to your doorstep with hassle-free rentals, secure payments, and trusted services.',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
             SizedBox(height: 20),
             Text(
               'Version: 1.0.0',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
             SizedBox(height: 20),
             Text(
@@ -42,17 +51,19 @@ class AboutPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: Colors.greenAccent,
               ),
             ),
             SizedBox(height: 10),
             ListTile(
               leading: Icon(Icons.email, color: Colors.yellowAccent),
-              title: Text('support@pitstop.com'),
+              title: Text('support@pitstop.com',
+                  style: TextStyle(color: Colors.white70)),
             ),
             ListTile(
               leading: Icon(Icons.phone, color: Colors.yellowAccent),
-              title: Text('+91 9876543210'),
+              title:
+              Text('+91 9876543210', style: TextStyle(color: Colors.white70)),
             ),
           ],
         ),
