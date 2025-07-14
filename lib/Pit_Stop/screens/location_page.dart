@@ -1,7 +1,7 @@
 import 'package:android_studio/Pit_Stop/model/car_model.dart';
 import 'package:android_studio/Pit_Stop/screens/payment_page.dart';
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart'; // Added for Firestore
 
 class LocationPage extends StatefulWidget {
   final Car car;
@@ -56,7 +56,8 @@ class _LocationPageState extends State<LocationPage> {
               onPrimary: Colors.black,
               surface: Colors.grey[800]!,
               onSurface: Colors.white,
-            ), dialogTheme: DialogThemeData(backgroundColor: Colors.grey[900]),
+            ),
+            dialogTheme: DialogThemeData(backgroundColor: Colors.grey[900]),
           ),
           child: child!,
         );
@@ -67,6 +68,19 @@ class _LocationPageState extends State<LocationPage> {
         selectedDate = picked;
       });
     }
+  }
+
+  Future<void> saveBookingToFirestore() async {
+    final bookingData = {
+      'carName': widget.car.name,
+      'pickupLocation': selectedPickupLocation,
+      'dropLocation': selectedDropLocation,
+      'pickupDate': '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+      'timeSlot': selectedTimeSlot,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    await FirebaseFirestore.instance.collection('Bookings').add(bookingData);
   }
 
   @override
@@ -96,7 +110,6 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Pickup Location Dropdown
                 const Text(
                   'Pickup Location',
                   style: TextStyle(
@@ -140,7 +153,6 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Drop Location Dropdown
                 const Text(
                   'Drop Location',
                   style: TextStyle(
@@ -184,7 +196,6 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Pickup Date Selection
                 const Text(
                   'Pickup Date',
                   style: TextStyle(
@@ -220,7 +231,6 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Time Slot Dropdown
                 const Text(
                   'Select Time Slot',
                   style: TextStyle(
@@ -262,10 +272,9 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Proceed Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (selectedPickupLocation == null ||
                           selectedDropLocation == null ||
                           selectedDate == null) {
@@ -275,6 +284,8 @@ class _LocationPageState extends State<LocationPage> {
                         );
                         return;
                       }
+
+                      await saveBookingToFirestore(); // Save booking info
 
                       Navigator.push(
                         context,
