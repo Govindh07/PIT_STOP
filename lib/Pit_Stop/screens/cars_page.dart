@@ -110,7 +110,6 @@ class _CarsListPageState extends State<CarsListPage> {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
         break;
       case 1:
-      // Already on CarsListPage
         break;
       case 2:
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) =>  const SettingsPage()));
@@ -164,16 +163,19 @@ class _CarsListPageState extends State<CarsListPage> {
                       fit: BoxFit.cover,
                     ),
                   ),
+
                   const SizedBox(height: 12),
                   Text(
                     car.name,
                     style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 4),
                   Text(
                     'Capacity: ${car.capacity} · ${car.pricePerDay}',
                     style: const TextStyle(color: Colors.white60),
                   ),
+
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,6 +196,7 @@ class _CarsListPageState extends State<CarsListPage> {
           );
         },
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.yellow,
