@@ -1,9 +1,11 @@
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:flutter/material.dart';
 
-
-void main(){
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false,home: ResetPasswordPage(),));
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: ResetPasswordPage(),
+  ));
 }
 
 class ResetPasswordPage extends StatefulWidget {
@@ -12,13 +14,9 @@ class ResetPasswordPage extends StatefulWidget {
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
-
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +27,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(16),
@@ -49,21 +48,22 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     const CircleAvatar(
                       backgroundColor: Colors.yellowAccent,
                       radius: 30,
-                      child: Icon(Icons.vpn_key, color: Colors.black, size: 30),
+                      child:
+                      Icon(Icons.vpn_key, color: Colors.black, size: 30),
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      "Reset Password",
+                      textAlign: TextAlign.center,
+                      "Enter your email and we will send you a reset password link...",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
                     ),
-                    const SizedBox(height: 30,),
+                    const SizedBox(height: 30),
                     TextFormField(
                       controller: _emailController,
-                      obscureText: true,
+                      keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: "Email",
@@ -71,42 +71,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value != _passwordController.text) {
-                          return 'email does not match';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "Current Password",
-                        labelStyle: TextStyle(color: Colors.white),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your current password';
+                          return 'Please enter your email';
                         }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "Enter New Password",
-                        labelStyle: TextStyle(color: Colors.white),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value != _passwordController.text) {
-                          return 'New Password';
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$')
+                            .hasMatch(value)) {
+                          return 'Enter a valid email';
                         }
                         return null;
                       },
@@ -121,18 +91,26 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              // Password reset logic
+                              // Email reset logic
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Password reset successful")),
+                                const SnackBar(
+                                    content:
+                                    Text("Password reset link sent")),
                               );
                             }
                           },
-                          child: const Text("Continue",style: TextStyle(color: Colors.black),),
+                          child: const Text(
+                            "Reset Password",
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => const HomePage()));
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const HomePage()),
+                            );
                           },
                           child: const Text(
                             "Cancel",
