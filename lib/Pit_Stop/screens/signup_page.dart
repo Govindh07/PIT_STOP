@@ -1,6 +1,6 @@
-
 import 'package:android_studio/Pit_Stop/screens/login_page.dart';
 import 'package:android_studio/firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -22,9 +22,24 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _dobController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -48,11 +63,25 @@ class _RegisterPageState extends State<RegisterPage> {
           password: _passwordController.text.trim(),
         );
 
+        await addUserDetails(
+          _firstNameController.text.trim(),
+          _lastNameController.text.trim(),
+          _phoneController.text.trim(),
+          _dobController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registered Successfully')),
         );
 
         _emailController.clear();
+        _passwordController.clear();
+        _firstNameController.clear();
+        _lastNameController.clear();
+        _phoneController.clear();
+        _dobController.clear();
         _passwordController.clear();
 
         Future.delayed(const Duration(seconds: 1), () {
@@ -60,14 +89,46 @@ class _RegisterPageState extends State<RegisterPage> {
             context,
             MaterialPageRoute(builder: (context) => const LoginPage()),
           );
-        }
-        );
+        });
+
         print(userCredential.user?.uid);
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? 'Registration failed')),
         );
       }
+    }
+  }
+
+  Future<void> addUserDetails(
+      String firstname,
+      String lastname,
+      String phone,
+      String dob,
+      String email,
+      String password,
+      ) async {
+    await FirebaseFirestore.instance.collection("Users").add({
+      "First Name": firstname,
+      "Last Name": lastname,
+      "Phone Number": phone,
+      "Date of Birth": dob,
+      "Email": email,
+      "password" : password,
+    });
+  }
+
+  Future<void> _selectDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _dobController.text = "${picked.day}/${picked.month}/${picked.year}";
+      });
     }
   }
 
@@ -116,6 +177,68 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: TextStyle(color: Colors.black),
                       ),
                       const SizedBox(height: 25),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _firstNameController,
+                              decoration: const InputDecoration(
+                                hintText: 'First Name',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value!.isEmpty ? 'Enter first name' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _lastNameController,
+                              decoration: const InputDecoration(
+                                hintText: 'Last Name',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) => value!.isEmpty ? 'Enter last name' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.phone),
+                          hintText: 'Phone Number',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Please enter phone number';
+                          } else if (value.length < 10) {
+                            return 'Enter valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      TextFormField(
+                        controller: _dobController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.calendar_today),
+                          hintText: 'Date of Birth',
+                          border: OutlineInputBorder(),
+                        ),
+                        onTap: _selectDate,
+                        validator: (value) =>
+                        value == null || value.isEmpty ? 'Select date of birth' : null,
+                      ),
+
+                      const SizedBox(height: 15),
 
                       TextFormField(
                         controller: _emailController,
