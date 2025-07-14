@@ -1,4 +1,5 @@
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -17,6 +18,39 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+
+@override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  //Reset Password Functionality
+
+  Future passwordReset() async {
+ try{
+   await FirebaseAuth.instance.sendPasswordResetEmail(
+       email: _emailController.text.trim());
+   showDialog(
+       context: context,
+       builder: (context){
+         return AlertDialog(
+           content: Text("Password reset link sent! Check your email"),
+         );
+       }
+   );
+ } on FirebaseAuthException catch(e){
+   print(e);
+   showDialog(
+       context: context,
+       builder: (context){
+         return AlertDialog(
+           content: Text(e.message.toString()),
+         );
+       }
+   );
+ }
+  }
 
   @override
   Widget build(BuildContext context) {
