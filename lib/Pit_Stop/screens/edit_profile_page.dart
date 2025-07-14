@@ -5,7 +5,6 @@ import 'package:android_studio/Pit_Stop/screens/profile_page.dart';
 import 'package:android_studio/Pit_Stop/screens/settings_page.dart';
 import 'package:flutter/material.dart';
 
-
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
@@ -16,7 +15,8 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController nameController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController secondNameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
@@ -84,10 +84,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               const SizedBox(height: 16),
               buildTextFormField(
-                label: "Fullname",
-                controller: nameController,
+                label: "First name",
+                controller: firstNameController,
                 validator: (value) =>
-                value == null || value.trim().isEmpty ? 'Name is required' : null,
+                value == null || value.trim().isEmpty ? 'First name is required' : null,
+              ),
+              buildTextFormField(
+                label: "Second name",
+                controller: secondNameController,
+                validator: (value) =>
+                value == null || value.trim().isEmpty ? 'Second name is required' : null,
               ),
               buildPhoneField(),
               buildTextFormField(
@@ -207,8 +213,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
               controller: phoneController,
               keyboardType: TextInputType.phone,
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Phone number is required';
-                if (value.length < 11 || value.isNotEmpty ) return 'Enter a valid phone number';
+                if (value == null || value.trim().isEmpty) {
+                  return 'Phone number is required';
+                }
+                if (!RegExp(r'^\d{10}$').hasMatch(value.trim())) {
+                  return 'Enter a valid 10-digit phone number';
+                }
                 return null;
               },
               style: const TextStyle(color: Colors.white),
