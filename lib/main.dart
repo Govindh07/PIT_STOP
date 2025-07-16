@@ -15,7 +15,20 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  // ✅ Preload theme from SharedPreferences
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadTheme(); // this must exist in ThemeProvider
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => HistoryProvider()),
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider), // use preloaded provider
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,53 +36,44 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
-        ChangeNotifierProvider(create: (_) => HistoryProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            themeMode: themeProvider.themeMode,
-            theme: ThemeData(
-              brightness: Brightness.light,
-              scaffoldBackgroundColor: Colors.white,
-              appBarTheme: const AppBarTheme(backgroundColor: Colors.white),
-              textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.black)),
-              dividerColor: Colors.grey[300],
-              bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-                backgroundColor: Colors.white,
-              ),
-            ),
-            darkTheme: ThemeData(
-              brightness: Brightness.dark,
-              scaffoldBackgroundColor: Colors.black,
-              appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
-              textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.white)),
-              dividerColor: Colors.grey,
-              bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-                backgroundColor: Colors.black,
-              ),
-            ),
-            home: StreamBuilder<User?>(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
-                    backgroundColor: Colors.black,
-                    body: Center(child: CircularProgressIndicator(color: Colors.yellow)),
-                  );
-                } else if (snapshot.hasData) {
-                  return const HomePage();
-                } else {
-                  return const StartingPage();
-                }
-              },
-            ),
-          );
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.white),
+        textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.black)),
+        dividerColor: Colors.grey[300],
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
+        textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.white)),
+        dividerColor: Colors.grey,
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.black,
+        ),
+      ),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(child: CircularProgressIndicator(color: Colors.yellow)),
+            );
+          } else if (snapshot.hasData) {
+            return const HomePage();
+          } else {
+            return const StartingPage();
+          }
         },
       ),
     );
