@@ -1,12 +1,14 @@
-import 'package:android_studio/Pit_Stop/screens/starting_page.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
+import 'package:android_studio/Pit_Stop/screens/starting_page.dart';
 import 'package:android_studio/Pit_Stop/provider/favourite_provider.dart';
 import 'package:android_studio/Pit_Stop/provider/history_provider.dart';
 import 'package:android_studio/Pit_Stop/provider/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 import 'firebase_options.dart';
 
 void main() async {
@@ -15,16 +17,15 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ✅ Preload theme from SharedPreferences
   final themeProvider = ThemeProvider();
-  await themeProvider.loadTheme(); // this must exist in ThemeProvider
+  await themeProvider.loadTheme(); // wait for shared prefs to load
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
-        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider), // use preloaded provider
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider), // use preloaded instance
       ],
       child: const MyApp(),
     ),
@@ -46,10 +47,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(backgroundColor: Colors.white),
         textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.black)),
-        dividerColor: Colors.grey[300],
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-        ),
+        dividerColor: Colors.grey,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
@@ -57,9 +55,6 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
         textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.white)),
         dividerColor: Colors.grey,
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.black,
-        ),
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
