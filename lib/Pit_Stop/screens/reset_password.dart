@@ -1,24 +1,18 @@
-import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: ResetPasswordPage(),
-  ));
-}
+import 'home_page.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
 
   @override
-  _ResetPasswordPageState createState() => _ResetPasswordPageState();
+  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -27,55 +21,40 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   }
 
   Future<void> passwordReset() async {
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    if (email.isEmpty) return;
+
+    setState(() => _loading = true);
 
     try {
-      // 🔍 Check if account is registered
-      final methods =
-      await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      // ✅ Check if the email is registered
+      final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
 
-      if (methods.isEmpty) {
-        // ❌ No account found
+      if (methods.isEmpty || !methods.contains('password')) {
         showDialog(
           context: context,
-          builder: (context) => const AlertDialog(
-            content: Text(
-              "This account is not registered to an existing account.",
-            ),
+          builder: (_) => const AlertDialog(
+            content: Text("This email is not registered to any account."),
           ),
         );
-        return;
-      }
-
-      if (!methods.contains('password')) {
-        // ⚠ Registered but not with email/password
+      } else {
+        // ✅ If registered, send password reset email
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
         showDialog(
           context: context,
-          builder: (context) => const AlertDialog(
-            content: Text(
-              "This account is registered using a different sign-in method.",
-            ),
+          builder: (_) => const AlertDialog(
+            content: Text("Password reset link sent! Check your email."),
           ),
         );
-        return;
       }
-
-      // ✅ Send password reset email
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-
-      showDialog(
-        context: context,
-        builder: (context) => const AlertDialog(
-          content: Text("Password reset link sent! Check your email."),
-        ),
-      );
     } on FirebaseAuthException catch (e) {
+      String errorMessage = e.message ?? "An error occurred.";
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          content: Text(e.message ?? "An error occurred."),
-        ),
+        builder: (_) => AlertDialog(content: Text(errorMessage)),
       );
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
@@ -84,22 +63,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
-        child: SingleChildScrollView(
+        child: _loading
+            ? const CircularProgressIndicator(color: Colors.yellow)
+            : SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24),
             child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black54,
-                    offset: Offset(4, 4),
-                    blurRadius: 10,
-                  ),
-                ],
               ),
               child: Form(
                 key: _formKey,
@@ -115,10 +88,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     const Text(
                       textAlign: TextAlign.center,
                       "Enter your email and we will send you a reset password link...",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 20),
                     ),
                     const SizedBox(height: 30),
                     TextFormField(
@@ -132,11 +102,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$')
-                            .hasMatch(value)) {
-                          return 'Enter a valid email';
+                          return 'Enter email';
                         }
                         return null;
                       },
@@ -151,7 +117,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              passwordReset(); // ✅ Final logic
+                              passwordReset();
                             }
                           },
                           child: const Text(
@@ -161,11 +127,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HomePage()),
-                            );
+                            Navigator.pop(context);
                           },
                           child: const Text(
                             "Cancel",
