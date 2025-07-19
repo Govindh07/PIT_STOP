@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _navigateToEditProfile() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfilePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfilePage()));
   }
 
   void _navigateToHistory() {
