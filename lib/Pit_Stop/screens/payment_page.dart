@@ -1,8 +1,7 @@
-
 import 'package:android_studio/Pit_Stop/model/booking_model.dart';
 import 'package:android_studio/Pit_Stop/model/car_model.dart';
 import 'package:android_studio/Pit_Stop/provider/history_provider.dart';
-import 'package:android_studio/Pit_Stop/screens/history_page.dart';
+import 'package:android_studio/Pit_Stop/screens/payment_done.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,13 +63,9 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
       ),
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment Successful via $method!')),
-    );
-
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const HistoryPage()),
+      MaterialPageRoute(builder: (_) => const PaymentDonePage()),
     );
   }
 
@@ -113,41 +108,21 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
         key: _cardFormKey,
         child: ListView(
           children: [
-            _buildInputField(
-              hint: 'Card Number',
-              icon: Icons.credit_card,
-              keyboardType: TextInputType.number,
-              onSaved: (val) => cardNumber = val!,
-            ),
+            _buildInputField(hint: 'Card Number', icon: Icons.credit_card, keyboardType: TextInputType.number, onSaved: (val) => cardNumber = val!),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _buildInputField(
-                    hint: 'Expiry Date',
-                    icon: Icons.date_range,
-                    keyboardType: TextInputType.datetime,
-                    onSaved: (val) => expiry = val!,
-                  ),
+                  child: _buildInputField(hint: 'Expiry Date', icon: Icons.date_range, keyboardType: TextInputType.datetime, onSaved: (val) => expiry = val!),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildInputField(
-                    hint: 'CVV',
-                    icon: Icons.lock,
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    onSaved: (val) => cvv = val!,
-                  ),
+                  child: _buildInputField(hint: 'CVV', icon: Icons.lock, keyboardType: TextInputType.number, obscureText: true, onSaved: (val) => cvv = val!),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildInputField(
-              hint: 'Card Holder Name',
-              icon: Icons.person,
-              onSaved: (val) => cardHolder = val!,
-            ),
+            _buildInputField(hint: 'Card Holder Name', icon: Icons.person, onSaved: (val) => cardHolder = val!),
             const SizedBox(height: 24),
             _buildPayButton(() {
               if (_cardFormKey.currentState!.validate()) {
@@ -168,12 +143,7 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
         key: _upiFormKey,
         child: Column(
           children: [
-            _buildInputField(
-              hint: 'Enter UPI ID',
-              icon: Icons.account_balance_wallet,
-              keyboardType: TextInputType.emailAddress,
-              onSaved: (val) => upiId = val!,
-            ),
+            _buildInputField(hint: 'Enter UPI ID', icon: Icons.account_balance_wallet, keyboardType: TextInputType.emailAddress, onSaved: (val) => upiId = val!),
             const SizedBox(height: 24),
             _buildPayButton(() {
               if (_upiFormKey.currentState!.validate()) {
@@ -200,12 +170,7 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
             DropdownButtonFormField<String>(
               dropdownColor: Colors.grey[900],
               value: selectedWallet,
-              items: wallets
-                  .map((wallet) => DropdownMenuItem(
-                value: wallet,
-                child: Text(wallet, style: const TextStyle(color: Colors.white)),
-              ))
-                  .toList(),
+              items: wallets.map((wallet) => DropdownMenuItem(value: wallet, child: Text(wallet, style: const TextStyle(color: Colors.white)))).toList(),
               decoration: _dropdownDecoration(),
               onChanged: (val) => setState(() => selectedWallet = val!),
             ),
@@ -232,12 +197,7 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
             DropdownButtonFormField<String>(
               dropdownColor: Colors.grey[900],
               value: selectedBank,
-              items: banks
-                  .map((bank) => DropdownMenuItem(
-                value: bank,
-                child: Text(bank, style: const TextStyle(color: Colors.white)),
-              ))
-                  .toList(),
+              items: banks.map((bank) => DropdownMenuItem(value: bank, child: Text(bank, style: const TextStyle(color: Colors.white)))).toList(),
               decoration: _dropdownDecoration(),
               onChanged: (val) => setState(() => selectedBank = val!),
             ),
@@ -267,14 +227,8 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
     return InputDecoration(
       filled: true,
       fillColor: Colors.grey[900],
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.yellow),
-      ),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.yellow)),
     );
   }
 
@@ -302,4 +256,3 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
     );
   }
 }
-

@@ -2,7 +2,6 @@ import 'package:android_studio/Pit_Stop/provider/history_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
 
