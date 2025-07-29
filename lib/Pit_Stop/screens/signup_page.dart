@@ -10,17 +10,17 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: RegisterPage()));
+  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: SignupPage()));
 }
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<SignupPage> createState() => _SignupState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _SignupState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
