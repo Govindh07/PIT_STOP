@@ -157,9 +157,9 @@ import 'package:android_studio/Pit_Stop/screens/favourite_page.dart';
 import 'package:android_studio/Pit_Stop/screens/history_page.dart';
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:android_studio/Pit_Stop/screens/settings_page.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -170,46 +170,34 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 3;
-
-  String fullName = 'Loading...';
+  String firstName = '';
   String email = '';
 
   @override
   void initState() {
     super.initState();
-    fetchUserDetails();
+    _fetchUserData();
   }
 
-  Future<void> fetchUserDetails() async {
+  Future<void> _fetchUserData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('Email', isEqualTo: user.email)
+            .get();
 
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('Users') // <-- Note the capital U ✅
-          .doc(user.uid)
-          .get();
-
-      if (docSnapshot.exists) {
-        final data = docSnapshot.data();
-        if (data != null) {
+        if (querySnapshot.docs.isNotEmpty) {
+          final data = querySnapshot.docs.first.data();
           setState(() {
-            fullName = '${data['First Name']} ${data['Last Name']}';
-            email = data['Email'];
+            firstName = data['First Name'] ?? '';
+            email = data['Email'] ?? '';
           });
         }
-      } else {
-        setState(() {
-          fullName = 'No Name Found';
-          email = 'No Email';
-        });
       }
     } catch (e) {
-      print('Error fetching user details: $e');
-      setState(() {
-        fullName = 'Error loading';
-        email = '';
-      });
+      print('Failed to fetch user data: $e');
     }
   }
 
@@ -289,11 +277,11 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 12),
             Text(
-              fullName,
+              firstName.isNotEmpty ? firstName : 'Loading...',
               style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Text(
-              email,
+              email.isNotEmpty ? email : '',
               style: const TextStyle(color: Colors.white60),
             ),
             const SizedBox(height: 24),
