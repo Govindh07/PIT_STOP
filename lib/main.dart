@@ -15,11 +15,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadTheme(); // Load persisted theme
+
+  runApp(PitStop(themeProvider: themeProvider));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PitStop extends StatelessWidget {
+  final ThemeProvider themeProvider;
+
+  const PitStop({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -27,25 +32,32 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => themeProvider),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                backgroundColor: Colors.black,
-                body: Center(child: CircularProgressIndicator(color: Colors.yellow)),
-              );
-            } else if (snapshot.hasData) {
-              return const HomePage();
-            } else {
-              return const StartingPage();
-            }
-          },
-        ),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            themeMode: themeProvider.themeMode,
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            home: StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    backgroundColor: Colors.black,
+                    body: Center(child: CircularProgressIndicator(color: Colors.yellow)),
+                  );
+                } else if (snapshot.hasData) {
+                  return const HomePage();
+                } else {
+                  return const StartingPage();
+                }
+              },
+            ),
+          );
+        },
       ),
     );
   }
