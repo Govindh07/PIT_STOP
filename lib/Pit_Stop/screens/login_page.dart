@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData.light(), // <<--- Forces light theme
+      data: ThemeData.light(),
       child: Scaffold(
         body: Stack(
           children: [

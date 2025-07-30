@@ -10,13 +10,13 @@ class PaymentDonePage extends StatelessWidget {
     return WillPopScope(
       onWillPop: () async => false, // Prevents back navigation
       child: Scaffold(
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.black,
         body: Column(
           children: [
             const SizedBox(height: 100),
             const Center(
               child: Text(
-                'Thanks!',
+                'Payment Successful',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -28,7 +28,7 @@ class PaymentDonePage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(30),
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
                 child: FadeInUp(
@@ -38,22 +38,23 @@ class PaymentDonePage extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        backgroundColor: Colors.blue[900],
+                        backgroundColor: Colors.green,
                         child: const Icon(Icons.check, size: 30, color: Colors.white),
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Thank you for purchasing.',
+                        'Thank you for your booking!',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Your order will be shipped in 2-4 international days.',
+                        'Your car rental has been successfully confirmed. You can view your booking in History.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(color: Colors.grey[400]),
                       ),
                       const SizedBox(height: 40),
                       GestureDetector(
@@ -68,13 +69,13 @@ class PaymentDonePage extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Colors.black, Colors.purple],
+                              colors: [Colors.purple, Colors.yellow],
                             ),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: const Center(
                             child: Text(
-                              'CONTINUE SHOPPING',
+                              'GO TO HISTORY',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
