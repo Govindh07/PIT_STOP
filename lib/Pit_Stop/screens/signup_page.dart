@@ -10,7 +10,21 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: SignupPage()));
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(useMaterial3: true),
+      themeMode: ThemeMode.system, // auto-detect system theme
+      home: const SignupPage(),
+    );
+  }
 }
 
 class SignupPage extends StatefulWidget {
@@ -114,7 +128,7 @@ class _SignupState extends State<SignupPage> {
       "Phone Number": phone,
       "Date of Birth": dob,
       "Email": email,
-      "password" : password,
+      "password": password,
     });
   }
 
@@ -134,7 +148,10 @@ class _SignupState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
       body: Stack(
         children: [
           Container(
@@ -153,9 +170,9 @@ class _SignupState extends State<SignupPage> {
             child: Container(
               height: MediaQuery.of(context).size.height * 0.7,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
               ),
               child: SingleChildScrollView(
                 child: Form(
@@ -172,12 +189,11 @@ class _SignupState extends State<SignupPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         "Create your new account",
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       ),
                       const SizedBox(height: 25),
-
                       Row(
                         children: [
                           Expanded(
@@ -204,7 +220,6 @@ class _SignupState extends State<SignupPage> {
                         ],
                       ),
                       const SizedBox(height: 15),
-
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
@@ -222,9 +237,7 @@ class _SignupState extends State<SignupPage> {
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 15),
-
                       TextFormField(
                         controller: _dobController,
                         readOnly: true,
@@ -234,12 +247,9 @@ class _SignupState extends State<SignupPage> {
                           border: OutlineInputBorder(),
                         ),
                         onTap: _selectDate,
-                        validator: (value) =>
-                        value == null || value.isEmpty ? 'Select date of birth' : null,
+                        validator: (value) => value == null || value.isEmpty ? 'Select date of birth' : null,
                       ),
-
                       const SizedBox(height: 15),
-
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -256,9 +266,7 @@ class _SignupState extends State<SignupPage> {
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 15),
-
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -279,9 +287,7 @@ class _SignupState extends State<SignupPage> {
                         ),
                         validator: _validatePassword,
                       ),
-
                       const SizedBox(height: 25),
-
                       SizedBox(
                         width: double.infinity,
                         height: 50,

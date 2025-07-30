@@ -32,7 +32,8 @@ class PitStop extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
-        ChangeNotifierProvider(create: (_) => themeProvider),
+        ChangeNotifierProvider(create: (_) => themeProvider
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -47,12 +48,18 @@ class PitStop extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Scaffold(
                     backgroundColor: Colors.black,
-                    body: Center(child: CircularProgressIndicator(color: Colors.yellow)),
+                    body: Center(
+                      child: CircularProgressIndicator(color: Colors.yellow),
+                    ),
                   );
                 } else if (snapshot.hasData) {
                   return const HomePage();
                 } else {
-                  return const StartingPage();
+                  // Force light theme for StartingPage (which includes Login and Signup)
+                  return Theme(
+                    data: ThemeData.light(),
+                    child: const StartingPage(),
+                  );
                 }
               },
             ),
