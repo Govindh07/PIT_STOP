@@ -16,7 +16,7 @@ void main() async {
   );
 
   final themeProvider = ThemeProvider();
-  await themeProvider.loadTheme(); // Load persisted theme
+  await themeProvider.loadTheme();
 
   runApp(PitStop(themeProvider: themeProvider));
 }
