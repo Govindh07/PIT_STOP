@@ -11,6 +11,7 @@ class PaymentPage extends StatefulWidget {
   final String dropLocation;
   final DateTime pickupDate;
   final String timeSlot;
+  final double price;
 
   const PaymentPage({
     super.key,
@@ -19,6 +20,7 @@ class PaymentPage extends StatefulWidget {
     required this.dropLocation,
     required this.pickupDate,
     required this.timeSlot,
+    required this.price,
   });
 
   @override
