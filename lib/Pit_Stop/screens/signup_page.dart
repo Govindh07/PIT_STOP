@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light(useMaterial3: true),
-      themeMode: ThemeMode.system, // auto-detect system theme
+      themeMode: ThemeMode.system,
       home: const SignupPage(),
     );
   }
@@ -43,6 +43,7 @@ class _SignupState extends State<SignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -69,67 +70,64 @@ class _SignupState extends State<SignupPage> {
     return null;
   }
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+
       try {
-        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        // Create user with email/password
+        final userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        await addUserDetails(
-          _firstNameController.text.trim(),
-          _lastNameController.text.trim(),
-          _phoneController.text.trim(),
-          _dobController.text.trim(),
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
+        // Save user details to Firestore (without password)
+        await FirebaseFirestore.instance
+            .collection("Users")
+            .doc(userCredential.user!.uid)
+            .set({
+          "First Name": _firstNameController.text.trim(),
+          "Last Name": _lastNameController.text.trim(),
+          "Phone Number": _phoneController.text.trim(),
+          "Date of Birth": _dobController.text.trim(),
+          "Email": _emailController.text.trim(),
+          "createdAt": FieldValue.serverTimestamp(),
+        });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registered Successfully')),
-        );
-
+        // Clear all fields
         _emailController.clear();
         _passwordController.clear();
         _firstNameController.clear();
         _lastNameController.clear();
         _phoneController.clear();
         _dobController.clear();
-        _passwordController.clear();
 
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacement(
-            context,
+        // Navigate to login page
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginPage()),
+                (Route<dynamic> route) => false,
           );
-        });
-
-        print(userCredential.user?.uid);
+        }
       } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Registration failed')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Registration failed')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
-  }
-
-  Future<void> addUserDetails(
-      String firstname,
-      String lastname,
-      String phone,
-      String dob,
-      String email,
-      String password,
-      ) async {
-    await FirebaseFirestore.instance.collection("Users").add({
-      "First Name": firstname,
-      "Last Name": lastname,
-      "Phone Number": phone,
-      "Date of Birth": dob,
-      "Email": email,
-      "password": password,
-    });
   }
 
   Future<void> _selectDate() async {
@@ -292,11 +290,14 @@ class _SignupState extends State<SignupPage> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _handleRegister,
+                          onPressed: _isLoading ? null : _handleRegister,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
+                            disabledBackgroundColor: Colors.green.withOpacity(0.5),
                           ),
-                          child: const Text(
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
                             "Sign Up",
                             style: TextStyle(color: Colors.white),
                           ),
@@ -305,20 +306,22 @@ class _SignupState extends State<SignupPage> {
                       const SizedBox(height: 20),
                       Center(
                         child: GestureDetector(
-                          onTap: () {
+                          onTap: _isLoading
+                              ? null
+                              : () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => const LoginPage()),
                             );
                           },
-                          child: const Text.rich(
+                          child: Text.rich(
                             TextSpan(
                               text: "Already have an account? ",
                               children: [
                                 TextSpan(
                                   text: "Sign in",
                                   style: TextStyle(
-                                    color: Colors.green,
+                                    color: _isLoading ? Colors.grey : Colors.green,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -333,6 +336,11 @@ class _SignupState extends State<SignupPage> {
               ),
             ),
           ),
+          if (_isLoading)
+            const ModalBarrier(
+              dismissible: false,
+              color: Colors.black54,
+            ),
         ],
       ),
     );
