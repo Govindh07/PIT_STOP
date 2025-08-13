@@ -187,13 +187,12 @@
 //     );
 //   }
 // }
+//
 
-import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-
 import 'cars_page.dart';
 import 'favourite_page.dart';
 import 'home_page.dart';
@@ -207,8 +206,6 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final _formKey = GlobalKey<FormState>();
-
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _dobController = TextEditingController();
@@ -220,7 +217,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   String? docId;
   int _selectedIndex = 3;
-  File? _imageFile;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -228,52 +225,86 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _loadUserData();
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _dobController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      final snapshot = await _firestore
-          .collection('Users')
-          .where('Email', isEqualTo: user.email)
-          .get();
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // First try to get by UID (recommended approach)
+        DocumentSnapshot userDoc = await _firestore
+            .collection('Users')
+            .doc(user.uid)
+            .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data() as Map<String, dynamic>;
-        docId = snapshot.docs.first.id;
+        if (userDoc.exists) {
+          _populateFields(userDoc.data() as Map<String, dynamic>, userDoc.id);
+          return;
+        }
 
-        setState(() {
-          _firstNameController.text = data['First Name'] ?? '';
-          _lastNameController.text = data['Last Name'] ?? '';
-          _dobController.text = data['Date of Birth'] ?? '';
-          _emailController.text = data['Email'] ?? '';
-          _phoneController.text = data['Phone Number'] ?? '';
-        });
+        // Fallback: Try query by email
+        QuerySnapshot querySnapshot = await _firestore
+            .collection('Users')
+            .where('Email', isEqualTo: user.email)
+            .limit(1)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          _populateFields(
+              querySnapshot.docs.first.data() as Map<String, dynamic>,
+              querySnapshot.docs.first.id);
+          return;
+        }
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading data: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _imageFile = File(picked.path);
-      });
-    }
+  void _populateFields(Map<String, dynamic> data, String documentId) {
+    setState(() {
+      docId = documentId;
+      _firstNameController.text = data['First Name'] ?? '';
+      _lastNameController.text = data['Last Name'] ?? '';
+      _dobController.text = data['Date of Birth'] ?? '';
+      _emailController.text = data['Email'] ?? _auth.currentUser?.email ?? '';
+      _phoneController.text = data['Phone Number'] ?? '';
+    });
   }
 
   Future<void> _saveChanges() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (docId == null) return;
 
-    if (docId != null) {
+    try {
       await _firestore.collection('Users').doc(docId).update({
         'First Name': _firstNameController.text.trim(),
         'Last Name': _lastNameController.text.trim(),
         'Date of Birth': _dobController.text.trim(),
-        'Email': _emailController.text.trim(),
         'Phone Number': _phoneController.text.trim(),
+        // Don't update email here as it requires reauthentication
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully!')),
+      );
+      Navigator.pop(context); // Return to profile page after saving
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update: ${e.toString()}')),
       );
     }
   }
@@ -306,59 +337,57 @@ class _EditProfilePageState extends State<EditProfilePage> {
         title: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Center(
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _imageFile != null
-                          ? FileImage(_imageFile!)
-                          : const NetworkImage('https://cdn-icons-png.flaticon.com/512/149/149071.png')
-                      as ImageProvider,
+        child: Column(
+          children: [
+            Center(
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  const CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png',
                     ),
-                    InkWell(
-                      onTap: _pickImage,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.yellowAccent,
-                        ),
-                        child: const Icon(Icons.edit, size: 16, color: Colors.black),
-                      ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.yellowAccent,
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              _buildTextField("First Name", _firstNameController),
-              const SizedBox(height: 12),
-              _buildTextField("Last Name", _lastNameController),
-              const SizedBox(height: 12),
-              _buildTextField("Birthdate (DD/MM/YYYY)", _dobController),
-              const SizedBox(height: 12),
-              _buildTextField("Email", _emailController, readOnly: true, isEmail: true),
-              const SizedBox(height: 12),
-              _buildTextField("Mobile Number", _phoneController, isPhone: true),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: _saveChanges,
-                child: const Text("Update Profile", style: TextStyle(color: Colors.white)),
+            ),
+            const SizedBox(height: 24),
+            _buildTextField("First Name", _firstNameController),
+            const SizedBox(height: 12),
+            _buildTextField("Last Name", _lastNameController),
+            const SizedBox(height: 12),
+            _buildTextField("Date of Birth", _dobController),
+            const SizedBox(height: 12),
+            _buildTextField("Email", _emailController, readOnly: true),
+            const SizedBox(height: 12),
+            _buildTextField("Phone Number", _phoneController),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.yellow,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
-            ],
-          ),
+              onPressed: _saveChanges,
+              child: const Text("Save Changes",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -380,21 +409,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {bool readOnly = false, bool isEmail = false, bool isPhone = false}) {
-    return TextFormField(
+      {bool readOnly = false}) {
+    return TextField(
       controller: controller,
       readOnly: readOnly,
       style: const TextStyle(color: Colors.white),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) return 'Required field';
-        if (isEmail && !RegExp(r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) {
-          return 'Enter a valid email';
-        }
-        if (isPhone && !RegExp(r'^[0-9]{10}$').hasMatch(value)) {
-          return 'Enter a 10-digit phone number';
-        }
-        return null;
-      },
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
