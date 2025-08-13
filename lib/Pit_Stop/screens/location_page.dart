@@ -15,9 +15,9 @@ class LocationPage extends StatefulWidget {
 class _LocationPageState extends State<LocationPage> {
   String? selectedPickupLocation;
   String? selectedDropLocation;
-
   DateTime? selectedDate;
   String selectedTimeSlot = '2 Hour Package';
+  bool _isSaving = false;
 
   final List<String> pickupLocations = [
     'MG Road',
@@ -83,6 +83,48 @@ class _LocationPageState extends State<LocationPage> {
     await FirebaseFirestore.instance.collection('Bookings').add(bookingData);
   }
 
+  Future<void> _proceedToPayment() async {
+    if (selectedPickupLocation == null ||
+        selectedDropLocation == null ||
+        selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all the fields')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      await saveBookingToFirestore();
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentPage(
+            car: widget.car,
+            pickupLocation: selectedPickupLocation!,
+            dropLocation: selectedDropLocation!,
+            pickupDate: selectedDate!,
+            timeSlot: selectedTimeSlot,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +152,7 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 30),
 
+                // Pickup Location Dropdown
                 const Text(
                   'Pickup Location',
                   style: TextStyle(
@@ -153,6 +196,7 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Drop Location Dropdown
                 const Text(
                   'Drop Location',
                   style: TextStyle(
@@ -196,6 +240,7 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Date Picker
                 const Text(
                   'Pickup Date',
                   style: TextStyle(
@@ -231,6 +276,7 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Time Slot Dropdown
                 const Text(
                   'Select Time Slot',
                   style: TextStyle(
@@ -272,34 +318,10 @@ class _LocationPageState extends State<LocationPage> {
                 ),
                 const SizedBox(height: 40),
 
+                // Proceed to Payment Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () async {
-                      if (selectedPickupLocation == null ||
-                          selectedDropLocation == null ||
-                          selectedDate == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Please fill all the fields.')),
-                        );
-                        return;
-                      }
-
-                      await saveBookingToFirestore(); // Save booking info
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PaymentPage(
-                            car: widget.car,
-                            pickupLocation: selectedPickupLocation!,
-                            dropLocation: selectedDropLocation!,
-                            pickupDate: selectedDate!,
-                            timeSlot: selectedTimeSlot,
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: _isSaving ? null : _proceedToPayment,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow[700],
                       foregroundColor: Colors.black,
@@ -310,7 +332,16 @@ class _LocationPageState extends State<LocationPage> {
                       ),
                       elevation: 5,
                     ),
-                    child: const Text('Proceed to Payment',
+                    child: _isSaving
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.black,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Text('Proceed to Payment',
                         style: TextStyle(fontSize: 16)),
                   ),
                 ),
@@ -322,6 +353,3 @@ class _LocationPageState extends State<LocationPage> {
     );
   }
 }
-
-
-
