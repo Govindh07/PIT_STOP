@@ -5,15 +5,9 @@ import 'package:android_studio/Pit_Stop/screens/favourite_page.dart';
 import 'package:android_studio/Pit_Stop/screens/history_page.dart';
 import 'package:android_studio/Pit_Stop/screens/home_page.dart';
 import 'package:android_studio/Pit_Stop/screens/settings_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    themeMode: ThemeMode.dark,
-    home: ProfilePage(),
-  ));
-}
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -24,6 +18,36 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 3;
+  String firstName = '';
+  String email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .where('Email', isEqualTo: user.email)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          final data = querySnapshot.docs.first.data();
+          setState(() {
+            firstName = data['First Name'] ?? '';
+            email = data['Email'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      print('Failed to fetch user data: $e');
+    }
+  }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -48,8 +72,9 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _navigateToEditProfile() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfilePage()));
+  void _navigateToEditProfile() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfilePage()));
+    _fetchUserData(); // Refresh after editing
   }
 
   void _navigateToHistory() {
@@ -100,13 +125,13 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Govindh V',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              firstName.isNotEmpty ? firstName : 'Loading...',
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const Text(
-              'govindh123@gmail.com',
-              style: TextStyle(color: Colors.white60),
+            Text(
+              email.isNotEmpty ? email : '',
+              style: const TextStyle(color: Colors.white60),
             ),
             const SizedBox(height: 24),
             buildProfileOption(Icons.person_outline, 'Profile Edit', _navigateToEditProfile),
