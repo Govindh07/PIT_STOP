@@ -18,8 +18,9 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 3;
-  String firstName = '';
+  String firstName = 'User';
   String email = '';
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -30,23 +31,67 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchUserData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final querySnapshot = await FirebaseFirestore.instance
-            .collection('Users')
-            .where('Email', isEqualTo: user.email)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          final data = querySnapshot.docs.first.data();
-          setState(() {
-            firstName = data['First Name'] ?? '';
-            email = data['Email'] ?? '';
-          });
-        }
+      if (user == null) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
       }
+
+      // First try to get by UID (recommended approach)
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        _updateUserData(userDoc.data() as Map<String, dynamic>);
+        return;
+      }
+
+      // Fallback: Try query by email
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('Email', isEqualTo: user.email)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        _updateUserData(querySnapshot.docs.first.data() as Map<String, dynamic>);
+        return;
+      }
+
+      // If no document found
+      setState(() {
+        firstName = 'User';
+        email = user.email ?? '';
+        isLoading = false;
+      });
+
     } catch (e) {
-      print('Failed to fetch user data: $e');
+      print('Error fetching user data: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load profile data'))
+      );
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+  void _updateUserData(Map<String, dynamic> data) {
+    if (!mounted) return;
+    setState(() {
+      firstName = data['First Name']?.toString() ??
+          data['firstName']?.toString() ??
+          data['name']?.toString() ??
+          'User';
+      email = data['Email']?.toString() ??
+          data['email']?.toString() ??
+          FirebaseAuth.instance.currentUser?.email ?? '';
+      isLoading = false;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -125,12 +170,18 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              firstName.isNotEmpty ? firstName : 'Loading...',
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            isLoading
+                ? const CircularProgressIndicator(color: Colors.yellow)
+                : Text(
+              firstName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Text(
-              email.isNotEmpty ? email : '',
+              email,
               style: const TextStyle(color: Colors.white60),
             ),
             const SizedBox(height: 24),
@@ -174,5 +225,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
-
