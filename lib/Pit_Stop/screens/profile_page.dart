@@ -158,14 +158,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D',
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.yellowAccent,
-                    ),
-                    child: const Icon(Icons.edit, size: 16, color: Colors.white),
-                  ),
                 ],
               ),
             ),
