@@ -52,18 +52,6 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(20),
         children: [
           ListTile(
-            leading: const Icon(Icons.dark_mode, color: Colors.yellow),
-            title: Text('Dark Mode', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
-            trailing: Switch(
-              value: isDarkMode,
-              onChanged: (value) {
-                themeProvider.toggleTheme(value);
-              },
-              activeColor: Colors.yellow,
-            ),
-          ),
-          Divider(color: Theme.of(context).dividerColor),
-          ListTile(
             leading: const Icon(Icons.privacy_tip, color: Colors.yellow),
             title: Text('Privacy Policy', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
             onTap: () {
